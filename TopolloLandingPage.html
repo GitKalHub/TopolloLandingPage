@@ -6,8 +6,8 @@
     <title>Topollo | Solo Developer & Digital Solutions</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -15,7 +15,10 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    fontFamily: { 
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    },
                     colors: {
                         brandBlue: '#3b82f6',
                         brandPurple: '#a855f7',
@@ -67,8 +70,44 @@
             padding-top: 70px; 
             padding-bottom: 20px;
         }
-        @media (max-width: 768px) {
+        @media (max-width: 600px) {
             section { padding-top: 60px; padding-bottom: 10px; }
+        }
+
+        /* ==========================================
+           HACKER TERMINAL BACKGROUND (DIBAIKI)
+           ========================================== */
+        #hacker-terminal {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 5; /* Diletakkan di hadapan supaya tak dilitupi warna background */
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            color: #22c55e; /* Warna hijau matrix terang */
+            opacity: 0.15; /* Kelutsinaran rendah (15%) supaya tak ganggu mata */
+            
+            /* TEKNIK MAGIS: Ini akan buat tulisan hijau hilang automatik bila ia lalu atas tulisan putih/gambar cerah! */
+            mix-blend-mode: screen; 
+            
+            font-size: 14px;
+            line-height: 1.5;
+            padding: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end; /* Tolak baris lama ke atas */
+            
+            /* Efek pudar (fade) di atas dan bawah */
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+            mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+            pointer-events: none; /* Supaya tak kacau butang bila user klik */
+        }
+        .terminal-line {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        @media (max-width: 600px) {
+            #hacker-terminal { font-size: 10px; padding: 10px; opacity: 0.12; }
         }
 
         /* ==========================================
@@ -108,6 +147,613 @@
             background: rgba(255, 255, 255, 0.07);
             border-color: rgba(255, 255, 255, 0.2);
             transform: translateY(-4px);
+        }
+
+        .text-gradient { background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .grad-primary { background-image: linear-gradient(to right, #3b82f6, #a855f7); }
+        .grad-teal { background-image: linear-gradient(to right, #14b8a6, #3b82f6); }
+        .grad-amber { background-image: linear-gradient(to right, #f59e0b, #ec4899); }
+        .grad-cyan { background-image: linear-gradient(to right, #06b6d4, #3b82f6); }
+        .grad-rose { background-image: linear-gradient(to right, #f43f5e, #a855f7); }
+
+        .hero-video { position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; z-index:-2; opacity:0.35; }
+        .overlay-dark { position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(to bottom, rgba(5,5,5,0.3), rgba(5,5,5,1)); z-index:-1; }
+        .glow-orb { position: absolute; border-radius: 50%; filter: blur(90px); z-index: -1; opacity: 0.25; pointer-events: none; }
+
+        /* ==========================================
+           TINDER-STYLE CARD STACK
+           ========================================== */
+        .card-stack-container {
+            position: relative; width: 100%; height: 420px; 
+            display: flex; align-items: flex-start; justify-content: center;
+            perspective: 1000px; margin-top: 5px;
+        }
+        @media (max-width: 600px) { .card-stack-container { height: 320px; } }
+
+        .card-stack { position: relative; width: 230px; height: 408px; touch-action: none; }
+        @media (max-width: 600px) { .card-stack { width: 170px; height: 302px; } }
+
+        .card {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            border-radius: 16px; overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            background-color: #1a1a1a;
+            box-shadow: 0 15px 30px -10px rgba(0,0,0,0.7);
+            transform-origin: 50% 100%; will-change: transform, opacity; visibility: hidden; 
+        }
+        .card.dragging { transition: none; cursor: grabbing; }
+        .card-img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+        .scroller-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <!-- HACKER TERMINAL BACKGROUND SCROLLER -->
+    <div id="hacker-terminal"></div>
+
+    <!-- STICKY NAVBAR -->
+    <nav class="fixed top-0 w-full glass-nav z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-[60px] md:h-[70px] flex items-center justify-between">
+            <a href="#home" class="text-xl md:text-2xl font-bold tracking-tighter text-white nav-link">Topollo<span class="text-brandBlue">.</span></a>
+            
+            <div class="hidden md:flex space-x-8 text-sm font-medium text-gray-300">
+                <a href="#about" class="hover:text-white transition-colors nav-link">About</a>
+                <a href="#services" class="hover:text-white transition-colors nav-link">Services</a>
+                <a href="#portfolio" class="hover:text-white transition-colors nav-link">Portfolio</a>
+                <a href="#pricing" class="hover:text-white transition-colors nav-link">Pricing</a>
+            </div>
+
+            <a href="#contact" class="hidden md:inline-flex items-center px-5 py-2 text-sm font-medium text-black bg-white border border-white/20 rounded-full hover:scale-105 transition-all nav-link">
+                Contact Me
+            </a>
+        </div>
+    </nav>
+
+    <!-- MAIN SNAP CONTAINER -->
+    <main id="mainScroll">
+        
+        <!-- ================= 1. HERO SECTION ================= -->
+        <section id="home" class="bg-black/40"> 
+            <video autoplay loop muted playsinline class="hero-video">
+                <source src="backgroundvideo.mp4" type="video/mp4">
+            </video>
+            <div class="overlay-dark"></div>
+            <div class="glow-orb bg-brandPurple w-[300px] md:w-[500px] h-[300px] md:h-[500px] top-[-100px] right-[-100px]"></div>
+
+            <div class="max-w-5xl mx-auto px-4 text-center relative z-10 w-full flex flex-col items-center justify-center h-full">
+                <h1 class="anim-up text-4xl sm:text-6xl md:text-8xl font-extrabold tracking-tight mb-4 md:mb-6 leading-tight">
+                    Scale Faster With <br>
+                    <span class="text-gradient grad-primary">Digital Automation</span>
+                </h1>
+                
+                <p class="anim-up delay-100 text-[13px] sm:text-base md:text-xl text-gray-300 mb-6 md:mb-12 max-w-3xl mx-auto font-light leading-relaxed">
+                    Modern web systems, AI integrations, and automation solutions custom-built by a Solo Developer for your business.
+                </p>
+                
+                <div class="anim-scale delay-200 flex justify-center w-full">
+                    <a href="#about" class="nav-link px-8 py-3.5 md:px-12 md:py-5 bg-white/95 backdrop-blur-md text-black font-bold rounded-full hover:bg-white hover:scale-105 transition-all flex justify-center items-center text-sm md:text-lg shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                        Explore My Work
+                    </a>
+                </div>
+            </div>
+
+            <div class="absolute bottom-4 md:bottom-8 left-1/2 transform -translate-x-1/2 anim-fade delay-300 animate-bounce pointer-events-none">
+                <i class="fa-solid fa-chevron-down text-white/40 text-lg md:text-2xl"></i>
+            </div>
+        </section>
+
+        <!-- ================= 2. ABOUT SECTION ================= -->
+        <section id="about" class="bg-[#0f0a05]/80 backdrop-blur-sm">
+            <div class="glow-orb bg-brandAmber w-[300px] md:w-[500px] h-[300px] md:h-[500px] left-[-150px] bottom-[-100px]"></div>
+            
+            <div class="max-w-6xl mx-auto px-4 md:px-6 w-full relative z-10 flex flex-col justify-center h-full">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-16 w-full">
+                    
+                    <div class="anim-left w-full md:w-5/12 flex justify-center md:justify-start">
+                        <div class="relative group w-[180px] md:w-[340px]" style="perspective: 1000px;">
+                            <div class="absolute -inset-2 bg-gradient-to-tr from-brandAmber to-brandRose opacity-30 blur-xl rounded-2xl group-hover:opacity-60 transition duration-500"></div>
+                            
+                            <div class="relative rounded-2xl overflow-hidden border border-white/10 bg-black/50 backdrop-blur-md shadow-2xl transition-transform duration-500 group-hover:scale-[1.03] group-hover:-rotate-2 h-[260px] md:h-[480px]">
+                                <img src="profilepicture.png" alt="Solo Developer" class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-500">
+                                
+                                <div class="absolute bottom-3 md:bottom-4 left-3 md:left-4 right-3 md:right-4 bg-black/70 backdrop-blur-md rounded-xl p-2 md:p-3 border border-white/10 flex items-center gap-2 md:gap-3 transform translate-y-2 group-hover:translate-y-0 opacity-80 group-hover:opacity-100 transition-all duration-300">
+                                    <span class="relative flex h-2.5 w-2.5">
+                                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                      <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                                    </span>
+                                    <p class="text-[10px] md:text-sm font-semibold text-white">Available for Work</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="anim-right delay-100 w-full md:w-7/12 text-center md:text-left flex flex-col justify-center">
+                        <h2 class="text-gradient grad-amber font-semibold tracking-wider text-[10px] md:text-sm uppercase mb-2">About Me</h2>
+                        <h3 class="text-2xl md:text-5xl font-bold mb-3 md:mb-6 text-white leading-tight">Solo Developer. <br class="hidden md:block"/><span class="text-gray-400">Tech Enthusiast.</span></h3>
+                        
+                        <p class="text-gray-300 text-[11px] md:text-base leading-relaxed mb-3 md:mb-5">
+                            Armed with a <b>Bachelor's Degree in Information Technology (IT)</b>, I build modern digital solutions that are fast, lightweight, and highly scalable.
+                        </p>
+                        <p class="text-gray-400 text-[11px] md:text-base leading-relaxed mb-5 md:mb-8">
+                            As a <i>freelance solo developer</i>, I am dedicated to delivering premium, agency-quality results without the heavy overhead costs. From initial UI/UX sketches to full-scale deployments.
+                        </p>
+                        
+                        <div class="grid grid-cols-3 gap-2 md:gap-6">
+                            <div class="bg-white/5 border border-white/10 rounded-xl p-2 md:p-5 text-center hover:bg-white/10 transition duration-300">
+                                <h4 class="text-brandAmber text-lg md:text-3xl font-bold mb-0.5 md:mb-2">15+</h4>
+                                <p class="text-[9px] md:text-sm text-gray-400">Projects Done</p>
+                            </div>
+                            <div class="bg-white/5 border border-white/10 rounded-xl p-2 md:p-5 text-center hover:bg-white/10 transition duration-300">
+                                <h4 class="text-brandAmber text-lg md:text-3xl font-bold mb-0.5 md:mb-2">100%</h4>
+                                <p class="text-[9px] md:text-sm text-gray-400">Satisfaction</p>
+                            </div>
+                            <div class="bg-white/5 border border-white/10 rounded-xl p-2 md:p-5 text-center hover:bg-white/10 transition duration-300">
+                                <h4 class="text-brandAmber text-lg md:text-3xl font-bold mb-0.5 md:mb-2">24/7</h4>
+                                <p class="text-[9px] md:text-sm text-gray-400">Automated</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 3. SERVICES SECTION ================= -->
+        <section id="services" class="bg-[#030b17]/80 backdrop-blur-sm">
+            <div class="glow-orb bg-brandBlue w-[400px] h-[400px] right-[-150px] top-[-50px]"></div>
+            
+            <div class="max-w-7xl mx-auto px-4 md:px-6 w-full relative z-10">
+                <div class="text-center mb-5 md:mb-12 anim-up">
+                    <h2 class="text-brandBlue font-semibold tracking-wider text-[10px] md:text-sm mb-1 md:mb-2 uppercase">Expertise</h2>
+                    <h3 class="text-2xl md:text-5xl font-bold">Digital Services</h3>
+                </div>
+
+                <div class="flex overflow-x-auto md:grid md:grid-cols-3 gap-3 md:gap-8 pb-4 snap-x snap-mandatory px-2">
+                    <div class="glass-card p-4 md:p-8 rounded-2xl anim-left min-w-[240px] snap-center">
+                        <div class="w-8 h-8 md:w-14 md:h-14 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-sm md:text-xl mb-3 md:mb-5"><i class="fa-solid fa-code"></i></div>
+                        <h4 class="text-sm md:text-xl font-semibold mb-2 md:mb-3">Web Development</h4>
+                        <p class="text-gray-400 text-[11px] md:text-base leading-relaxed">Ultra-fast portfolio, e-commerce, or company profile websites built to scale.</p>
+                    </div>
+                    <div class="glass-card p-4 md:p-8 rounded-2xl anim-up min-w-[240px] snap-center">
+                        <div class="w-8 h-8 md:w-14 md:h-14 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 text-sm md:text-xl mb-3 md:mb-5"><i class="fa-solid fa-database"></i></div>
+                        <h4 class="text-sm md:text-xl font-semibold mb-2 md:mb-3">Databases & Systems</h4>
+                        <p class="text-gray-400 text-[11px] md:text-base leading-relaxed">Inventory management, booking systems, and custom secure databases.</p>
+                    </div>
+                    <div class="glass-card p-4 md:p-8 rounded-2xl anim-right min-w-[240px] snap-center">
+                        <div class="w-8 h-8 md:w-14 md:h-14 rounded-full bg-green-500/20 flex items-center justify-center text-green-400 text-sm md:text-xl mb-3 md:mb-5"><i class="fa-brands fa-whatsapp"></i></div>
+                        <h4 class="text-sm md:text-xl font-semibold mb-2 md:mb-3">WhatsApp Bots</h4>
+                        <p class="text-gray-400 text-[11px] md:text-base leading-relaxed">Automated WhatsApp replies, notifications, and smart AI integrations.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 4. TECH STACK SECTION ================= -->
+        <section id="tech" class="bg-[#03131a]/80 backdrop-blur-sm">
+            <div class="glow-orb bg-brandCyan w-[300px] md:w-[500px] h-[300px] md:h-[500px] left-[5%] bottom-[5%] opacity-20"></div>
+
+            <div class="max-w-6xl mx-auto px-4 md:px-6 w-full text-center relative z-10">
+                <h2 class="text-gradient grad-cyan font-semibold tracking-wider text-[10px] md:text-sm mb-1 md:mb-2 uppercase anim-scale">Technology</h2>
+                <h3 class="text-2xl md:text-5xl font-bold mb-6 md:mb-16 anim-up">Modern Tech Stack</h3>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-8">
+                    <div class="glass-card p-4 md:p-8 rounded-2xl flex flex-col items-center justify-center anim-scale delay-100 hover:-translate-y-2 transition-transform">
+                        <i class="fa-brands fa-react text-3xl md:text-6xl text-[#61DAFB] mb-2 md:mb-4"></i>
+                        <span class="text-xs md:text-lg font-medium">React & Next.js</span>
+                    </div>
+                    <div class="glass-card p-4 md:p-8 rounded-2xl flex flex-col items-center justify-center anim-scale delay-100 hover:-translate-y-2 transition-transform">
+                        <i class="fa-brands fa-css3-alt text-3xl md:text-6xl text-[#38B2AC] mb-2 md:mb-4"></i>
+                        <span class="text-xs md:text-lg font-medium">Tailwind CSS</span>
+                    </div>
+                    <div class="glass-card p-4 md:p-8 rounded-2xl flex flex-col items-center justify-center anim-scale delay-200 hover:-translate-y-2 transition-transform">
+                        <i class="fa-brands fa-node-js text-3xl md:text-6xl text-[#339933] mb-2 md:mb-4"></i>
+                        <span class="text-xs md:text-lg font-medium">Node.js</span>
+                    </div>
+                    <div class="glass-card p-4 md:p-8 rounded-2xl flex flex-col items-center justify-center anim-scale delay-200 hover:-translate-y-2 transition-transform">
+                        <i class="fa-brands fa-figma text-3xl md:text-6xl text-[#F24E1E] mb-2 md:mb-4"></i>
+                        <span class="text-xs md:text-lg font-medium">Figma UI/UX</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 5. PORTFOLIO SECTION ================= -->
+        <section id="portfolio" class="bg-[#09030f]/80 backdrop-blur-sm">
+            <div class="glow-orb bg-brandPurple w-[400px] md:w-[600px] h-[400px] md:h-[600px] top-[10%] left-[10%] opacity-20"></div>
+            
+            <div class="max-w-7xl mx-auto px-4 md:px-6 w-full relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-12">
+                
+                <div class="w-full md:w-5/12 text-center md:text-left anim-left">
+                    <h2 class="text-brandPurple font-semibold tracking-wider text-[10px] md:text-sm mb-1 uppercase">Showcase</h2>
+                    <h3 class="text-2xl md:text-5xl font-bold mb-2 md:mb-6">Selected Work</h3>
+                    <p class="text-gray-400 text-[10px] md:text-base leading-relaxed max-w-xl mx-auto md:mx-0">
+                        A collection of interfaces and systems I've built. <br class="hidden md:block">
+                        <b class="text-white">Drag the cards</b> or use your <b class="text-white">mouse scroll</b> to explore the stack.
+                    </p>
+                </div>
+
+                <div class="w-full md:w-7/12 flex justify-center md:justify-end anim-right delay-100">
+                    <div class="card-stack-container">
+                        <div class="scroller-overlay" id="scroller"></div> 
+                        <div class="card-stack" id="cardStack">
+                            <div class="card"><img src="highlight1.png" alt="Port 1" class="card-img"></div>
+                            <div class="card"><img src="highlight2.png" alt="Port 2" class="card-img"></div>
+                            <div class="card"><img src="highlight3.png" alt="Port 3" class="card-img"></div>
+                            <div class="card"><img src="highlight4.png" alt="Port 4" class="card-img"></div>
+                            <div class="card"><img src="highlight5.png" alt="Port 5" class="card-img"></div>
+                            <div class="card"><img src="highlight6.png" alt="Port 6" class="card-img"></div>
+                            <div class="card"><img src="highlight7.png" alt="Port 7" class="card-img"></div>
+                            <div class="card"><img src="highlight8.png" alt="Port 8" class="card-img"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= 6. PROCESS SECTION ================= -->
+        <section id="process" class="bg-[#03120f]/80 backdrop-blur-sm">
+            <div class="glow-orb bg-brandTeal w-[400px] h-[400px] right-[-100px] bottom-[50px] opacity-20"></div>
+
+            <div class="max-w-6xl mx-auto px-4 md:px-6 w-full relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-16">
+                
+                <div class="w-full md:w-5/12 text-center md:text-left anim-left">
+                    <h2 class="text-gradient grad-teal font-semibold tracking-wider text-[10px] md:text-sm mb-1 uppercase">Workflow</h2>
+                    <h3 class="text-2xl md:text-5xl font-bold leading-tight">Development Process</h3>
+                </div>
+
+                <div class="w-full md:w-7/12 space-y-3 md:space-y-6">
+                    <div class="flex items-center gap-3 md:gap-6 glass-card p-4 md:p-6 rounded-2xl anim-right">
+                        <div class="flex-shrink-0 w-10 h-10 md:w-16 md:h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center font-bold text-gray-400 text-sm md:text-xl">1</div>
+                        <div>
+                            <h4 class="text-sm md:text-xl font-semibold mb-1">Strategy & Planning</h4>
+                            <p class="text-gray-400 text-[11px] md:text-base">Identifying core functions and system requirements to ensure alignment.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 md:gap-6 glass-card p-4 md:p-6 rounded-2xl anim-left delay-100">
+                        <div class="flex-shrink-0 w-10 h-10 md:w-16 md:h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center font-bold text-brandTeal text-sm md:text-xl">2</div>
+                        <div>
+                            <h4 class="text-sm md:text-xl font-semibold mb-1">UI/UX Prototyping</h4>
+                            <p class="text-gray-400 text-[11px] md:text-base">Interface design approval in Figma before any code is written.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 md:gap-6 glass-card p-4 md:p-6 rounded-2xl anim-right delay-200">
+                        <div class="flex-shrink-0 w-10 h-10 md:w-16 md:h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center font-bold text-brandBlue text-sm md:text-xl">3</div>
+                        <div>
+                            <h4 class="text-sm md:text-xl font-semibold mb-1">Development & Launch</h4>
+                            <p class="text-gray-400 text-[11px] md:text-base">Full coding, speed testing, and final deployment of the system.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 7. TESTIMONIALS SECTION ================= -->
+        <section id="testimonials" class="bg-[#0f1105]/80 backdrop-blur-sm">
+            <div class="glow-orb bg-brandEmerald w-[400px] h-[400px] left-[-100px] top-[-50px] opacity-20"></div>
+            
+            <div class="max-w-7xl mx-auto px-4 md:px-6 w-full relative z-10 text-center">
+                <h2 class="text-brandEmerald font-semibold tracking-wider text-[10px] md:text-sm mb-1 uppercase anim-scale">Testimonials</h2>
+                <h3 class="text-2xl md:text-5xl font-bold mb-6 md:mb-12 anim-up">What Clients Say</h3>
+
+                <div class="flex overflow-x-auto md:grid md:grid-cols-3 gap-4 md:gap-8 pb-4 snap-x snap-mandatory text-left px-2">
+                    <div class="glass-card p-5 md:p-8 rounded-2xl anim-left min-w-[260px] snap-center relative">
+                        <i class="fa-solid fa-quote-right absolute top-4 right-6 text-2xl text-white/5"></i>
+                        <div class="text-brandEmerald text-xs md:text-lg mb-3 md:mb-5"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                        <p class="text-gray-300 text-[11px] md:text-base mb-4 md:mb-6 italic leading-relaxed">"Very meticulous and fast work. My portfolio website looks much more premium than usual. Excellent service!"</p>
+                        <h4 class="font-semibold text-white text-sm md:text-lg">Farhan Ali</h4>
+                        <p class="text-[9px] md:text-sm text-gray-500">Freelance Photographer</p>
+                    </div>
+                    <div class="glass-card p-5 md:p-8 rounded-2xl anim-scale delay-100 min-w-[260px] snap-center relative">
+                        <i class="fa-solid fa-quote-right absolute top-4 right-6 text-2xl text-white/5"></i>
+                        <div class="text-brandEmerald text-xs md:text-lg mb-3 md:mb-5"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                        <p class="text-gray-300 text-[11px] md:text-base mb-4 md:mb-6 italic leading-relaxed">"The inventory system built is very easy to understand. The price offered is definitely worth it for a small business."</p>
+                        <h4 class="font-semibold text-white text-sm md:text-lg">Puan Zati</h4>
+                        <p class="text-[9px] md:text-sm text-gray-500">Boutique Owner</p>
+                    </div>
+                    <div class="glass-card p-5 md:p-8 rounded-2xl anim-right delay-200 min-w-[260px] snap-center relative">
+                        <i class="fa-solid fa-quote-right absolute top-4 right-6 text-2xl text-white/5"></i>
+                        <div class="text-brandEmerald text-xs md:text-lg mb-3 md:mb-5"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                        <p class="text-gray-300 text-[11px] md:text-base mb-4 md:mb-6 italic leading-relaxed">"Easy communication, no hidden charges like big agencies. Straight to the point and highly recommended."</p>
+                        <h4 class="font-semibold text-white text-sm md:text-lg">Hafizuddin</h4>
+                        <p class="text-[9px] md:text-sm text-gray-500">Startup Founder</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 8. PRICING / PLANS ================= -->
+        <section id="pricing" class="bg-[#120408]/80 backdrop-blur-sm">
+            <div class="glow-orb bg-brandRose w-[400px] md:w-[600px] h-[400px] md:h-[600px] right-[-50px] bottom-[0px] opacity-20"></div>
+            
+            <div class="max-w-7xl mx-auto px-4 md:px-6 w-full relative z-10 text-center">
+                <h2 class="text-gradient grad-rose font-semibold tracking-wider text-[10px] md:text-sm mb-1 uppercase anim-scale">Freelance Rates</h2>
+                <h3 class="text-2xl md:text-5xl font-bold mb-6 md:mb-12 anim-up">Basic Pricing Plans</h3>
+
+                <div class="flex overflow-x-auto md:grid md:grid-cols-3 gap-4 md:gap-8 pb-4 snap-x snap-mandatory text-left px-2">
+                    <div class="glass-card p-5 md:p-8 rounded-2xl anim-left min-w-[250px] snap-center flex flex-col">
+                        <h4 class="text-base md:text-2xl font-bold mb-1 md:mb-2">Landing Page</h4>
+                        <p class="text-gray-400 text-[11px] md:text-sm mb-4">Perfect for campaigns & profiles.</p>
+                        <div class="text-xl md:text-4xl font-extrabold text-white mb-6">Starts <span class="text-brandRose">RM 500</span></div>
+                        <ul class="space-y-2 md:space-y-4 text-[11px] md:text-sm text-gray-300 mb-4 flex-1">
+                            <li><i class="fa-solid fa-check text-brandRose mr-2 md:mr-3"></i> 1 Responsive Page</li>
+                            <li><i class="fa-solid fa-check text-brandRose mr-2 md:mr-3"></i> Custom Design</li>
+                            <li><i class="fa-solid fa-check text-brandRose mr-2 md:mr-3"></i> WhatsApp Integration</li>
+                        </ul>
+                    </div>
+                    <div class="glass-card p-5 md:p-8 rounded-2xl anim-scale border-brandRose/50 relative min-w-[250px] snap-center flex flex-col md:transform md:-translate-y-4">
+                        <div class="absolute top-0 right-0 bg-brandRose text-white text-[9px] md:text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-xl">POPULAR</div>
+                        <h4 class="text-base md:text-2xl font-bold mb-1 md:mb-2">Full Website</h4>
+                        <p class="text-gray-400 text-[11px] md:text-sm mb-4">Multi-page web systems.</p>
+                        <div class="text-xl md:text-4xl font-extrabold text-white mb-6">Starts <span class="text-brandRose">RM 1,500</span></div>
+                        <ul class="space-y-2 md:space-y-4 text-[11px] md:text-sm text-gray-300 mb-4 flex-1">
+                            <li><i class="fa-solid fa-check text-brandRose mr-2 md:mr-3"></i> Up to 5 Pages</li>
+                            <li><i class="fa-solid fa-check text-brandRose mr-2 md:mr-3"></i> CMS (Admin Panel)</li>
+                            <li><i class="fa-solid fa-check text-brandRose mr-2 md:mr-3"></i> Basic Hosting Setup</li>
+                        </ul>
+                    </div>
+                    <div class="glass-card p-5 md:p-8 rounded-2xl anim-right min-w-[250px] snap-center flex flex-col">
+                        <h4 class="text-base md:text-2xl font-bold mb-1 md:mb-2">System / Web App</h4>
+                        <p class="text-gray-400 text-[11px] md:text-sm mb-4">Databases & Automations.</p>
+                        <div class="text-xl md:text-4xl font-extrabold text-white mb-6">Starts <span class="text-brandRose">RM 2,500</span></div>
+                        <ul class="space-y-2 md:space-y-4 text-[11px] md:text-sm text-gray-300 mb-4 flex-1">
+                            <li><i class="fa-solid fa-check text-brandRose mr-2 md:mr-3"></i> Custom SQL Database</li>
+                            <li><i class="fa-solid fa-check text-brandRose mr-2 md:mr-3"></i> Admin Dashboard</li>
+                            <li><i class="fa-solid fa-check text-brandRose mr-2 md:mr-3"></i> Custom Business Logic</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 9. FAQ SECTION ================= -->
+        <section id="faq" class="bg-[#0a0512]/80 backdrop-blur-sm">
+            <div class="glow-orb bg-brandViolet w-[400px] h-[400px] left-[5%] top-[10%] opacity-20"></div>
+            
+            <div class="max-w-6xl mx-auto px-4 md:px-6 w-full relative z-10 flex flex-col md:flex-row items-start justify-between gap-6 md:gap-16 h-auto">
+                
+                <div class="w-full md:w-4/12 text-center md:text-left anim-left md:sticky md:top-20">
+                    <h2 class="text-brandViolet font-semibold tracking-wider text-[10px] md:text-sm mb-1 uppercase">Questions</h2>
+                    <h3 class="text-2xl md:text-5xl font-bold mb-4 md:mb-6 leading-tight">Frequently <br class="hidden md:block"> Asked Questions</h3>
+                    <p class="text-gray-400 text-xs md:text-base hidden md:block">Got a question? Here are the most common inquiries from my clients.</p>
+                </div>
+
+                <div class="w-full md:w-8/12 space-y-3 md:space-y-5 text-left">
+                    <div class="glass-card p-4 md:p-6 rounded-2xl anim-up delay-100">
+                        <h4 class="font-semibold text-[13px] md:text-lg text-white mb-2">Are there any hidden monthly fees?</h4>
+                        <p class="text-[11px] md:text-base text-gray-400">None. You only need to pay for the yearly server (hosting) and domain name based on your system's scale.</p>
+                    </div>
+                    <div class="glass-card p-4 md:p-6 rounded-2xl anim-up delay-200">
+                        <h4 class="font-semibold text-[13px] md:text-lg text-white mb-2">How long does a project take?</h4>
+                        <p class="text-[11px] md:text-base text-gray-400">Depending on the scale, a landing page usually takes 1-2 weeks, while a database system requires 3-6 weeks.</p>
+                    </div>
+                    <div class="glass-card p-4 md:p-6 rounded-2xl anim-up delay-300">
+                        <h4 class="font-semibold text-[13px] md:text-lg text-white mb-2">Can I update the website content myself?</h4>
+                        <p class="text-[11px] md:text-base text-gray-400">Absolutely. If you opt for the Full Website package, a Content Management System (CMS) will be provided for easy updates.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 10. CONTACT SECTION ================= -->
+        <section id="contact" class="bg-[#120505]/80 backdrop-blur-sm">
+            <div class="glow-orb bg-brandPink w-[400px] md:w-[600px] h-[400px] md:h-[600px] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-20"></div>
+
+            <div class="max-w-4xl mx-auto px-4 text-center w-full relative z-10">
+                <h2 class="anim-scale text-3xl md:text-6xl font-bold mb-4 md:mb-6">Let's Start a Project!</h2>
+                <p class="anim-up delay-100 text-gray-400 mb-8 md:mb-12 text-xs md:text-xl">Share your idea. I'm ready to help turn it into a robust digital reality.</p>
+                
+                <div class="anim-up delay-200 flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-5 w-full">
+                    <a href="mailto:hello@topollo.com" class="w-full sm:w-auto px-6 py-3.5 md:px-10 md:py-5 bg-white/5 border border-white/10 text-white font-medium rounded-full hover:bg-white/10 transition-colors flex items-center justify-center text-sm md:text-lg">
+                        <i class="fa-solid fa-envelope mr-2 md:mr-3"></i> hello@topollo.com
+                    </a>
+                    <a href="https://wa.me/60123456789" class="w-full sm:w-auto px-6 py-3.5 md:px-10 md:py-5 bg-gradient-to-r from-brandPink to-brandPurple text-white font-semibold rounded-full hover:scale-105 transition-transform flex items-center justify-center text-sm md:text-lg shadow-[0_0_30px_rgba(236,72,153,0.3)]">
+                        <i class="fa-brands fa-whatsapp mr-2 md:mr-3 text-lg md:text-2xl"></i> Discuss on WhatsApp
+                    </a>
+                </div>
+                
+                <div class="anim-fade delay-300 mt-12 md:mt-20 flex justify-center space-x-6 md:space-x-10 text-gray-500 text-2xl md:text-4xl">
+                    <a href="#" class="hover:text-white transition-all"><i class="fa-brands fa-github"></i></a>
+                    <a href="#" class="hover:text-brandBlue transition-all"><i class="fa-brands fa-linkedin"></i></a>
+                    <a href="#" class="hover:text-brandPink transition-all"><i class="fa-brands fa-instagram"></i></a>
+                </div>
+
+                <p class="anim-fade delay-400 mt-10 md:mt-16 text-[10px] md:text-sm text-gray-600 uppercase tracking-widest">&copy; 2026 Topollo. Solo Developer.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ================= JAVASCRIPT LOGIC ================= -->
+    <script>
+        // 1. HACKER TERMINAL BACKGROUND LOGIC
+        // Enjin yang menjalankan command beratus baris yang anda berikan!
+        const rawCommandString = `printf(); scanf(); cout << ""; cin >> x; System.out.println(); public static void main(String[] args); def main(): return True; echo "Hello World"; console.log(); document.getElementById(); querySelector(); SELECT * FROM users WHERE id=1; INSERT INTO table_name VALUES(); UPDATE users SET name='Ali'; DELETE FROM logs; CREATE TABLE data(); DROP DATABASE test; git init; git clone; git pull; git push origin main; git checkout -b branchbaru; npm install; npm run dev; yarn add react; pip install numpy; composer require laravel/framework; cargo build; rustc main.rs; chmod +x file.sh; sudo apt update; sudo apt install nginx; cd /var/www/html; ls -la; pwd; mkdir projekbaru; rm -rf node_modules; touch app.py; nano config.txt; vim main.c; cat file.log; grep "error" server.log; awk '{print $1}'; sed -i 's/old/new/g'; curl https://example.com; wget file.zip; ssh root@server; ftp upload.txt; ping google.com; traceroute 8.8.8.8; netstat -an; ifconfig; ip addr show; docker build -t app .; docker compose up; kubectl apply -f deployment.yaml; terraform init; ansible-playbook setup.yml; firebase deploy; vercel --prod; heroku logs --tail; php artisan serve; python manage.py runserver; rails server; flask run; go run main.go; javac Main.java; java Main; node app.js; deno run server.ts; bun run index.ts; perl script.pl; ruby app.rb; scala Main.scala; swift run; kotlin Main.kt; Rscript analysis.R; julia app.jl; gcc main.c -o output; clang++ main.cpp; make install; cmake ..; ./configure; export PATH=/usr/local/bin; source ~/.bashrc; env | grep HOME; history | tail; clear; reset; whoami; uname -a; top; htop; ps aux; kill -9 1337; systemctl restart apache2; service mysql start; journalctl -xe; tail -f access.log; chmod 777 folder; chown user:user file; passwd root; mysql -u root -p; mongosh; redis-cli; sqlite3 database.db; brew install python; scoop install git; choco install vscode; pacman -Syu; zypper refresh; apk add curl; snap install code; flatpak run app; pipenv shell; poetry install; virtualenv venv; source venv/bin/activate; npm audit fix; npx create-react-app myapp; vue create frontend; ng serve; svelte-kit dev; next build; nuxt generate; expo start; react-native run-android; flutter pub get; flutter run; ionic serve; capacitor sync; electron .; tauri dev; prisma migrate dev; sequelize db:migrate; knex migrate:latest; alembic upgrade head; pytest -v; jest --watch; mocha test.js; cypress open; playwright test; selenium webdriver; unittest.main(); cargo test; go test ./...; phpunit tests; rspec spec; mvn clean install; gradle build; ant compile; sbt run; bazel build //app; ninja -C build; meson setup builddir; qmake; open index.html; start chrome; xdg-open file.pdf; powershell Get-Process; Set-ExecutionPolicy RemoteSigned; Invoke-WebRequest; Get-ChildItem; Remove-Item; New-Item; Copy-Item; Move-Item; Test-Path; Start-Service; Stop-Service; Restart-Computer; shutdown /s /t 0; regedit; taskkill /IM chrome.exe /F; dir; cls; tree; format C:; diskpart; attrib +h secret.txt; certutil -hashfile; net user administrator; gpupdate /force; sc query; bcdedit; sfc /scannow; DISM /Online /Cleanup-Image /RestoreHealth; fsutil file createnew; mklink /D; python3 -m http.server; php -S localhost:8000; ruby -run -e httpd . -p 8080; nc -lvnp 4444; telnet localhost 80; openssl req -new -x509; gpg --gen-key; hashcat -m 0; john --wordlist=passwords.txt; hydra -l admin -P pass.txt; aircrack-ng capture.cap; nmap -sV localhost; sqlmap -u target; metasploit msfconsole; wireshark capture.pcap; tcpdump -i eth0; burpsuite; nikto -h localhost; fail2ban-client status; ufw allow 22; iptables -A INPUT; nft add rule; proxychains curl; torify wget; ssh-keygen -t rsa; ssh-copy-id user@host; rsync -avz folder/ server:/backup; scp file.txt user@host:/tmp; crontab -e; at now + 1 hour; nohup python bot.py &; screen -S session; tmux new -s dev; alias ll='ls -la'; function hello(){ echo hi; }; while(true){ console.log("loop"); } for(i=0;i<100;i++); switch(case); try{ } catch(e){ }; async function loadData(); await fetch(url); Promise.resolve(); lambda x: x*2; map(); filter(); reduce(); enumerate(); zip(); yield return; class MyClass extends BaseClass; interface IUser {}; struct Data {}; enum Status {}; typedef unsigned long ulong; namespace App\\Controllers; using System.Collections.Generic; import React from 'react'; from flask import Flask; require('express'); include <stdio.h>; #define MAX 100; macro_rules!; trait Display; impl Clone for User; package main; func init(); defer file.Close(); panic(err); recover(); synchronized(this); volatile int counter; template<typename T>; constexpr int size=10; operator++; friend class; mutable keyword; sealed class; record User(String name); var_dump($data); dd($request); artisan migrate:fresh; eloquent::where(); socket.emit(); io.on('connection'); app.use(express.json()); router.get('/api'); middleware(auth); JWT.verify(); bcrypt.hashSync(); dotenv.config(); process.env.PORT; localStorage.setItem(); sessionStorage.getItem(); indexedDB.open(); window.onload=function(); requestAnimationFrame(); setInterval(); clearTimeout(); WebSocket('ws://'); fetch('/api/data'); axios.get(); useEffect(()=>{}); useState(); useRef(); useMemo(); useCallback(); createContext(); Redux.createStore(); dispatch(action); commit mutation; pinia.defineStore(); Zustand.create(); recoil atom(); mobx observable(); signal(); computed(); watchEffect(); onMounted(); beforeDestroy(); Livewire.emit(); Alpine.data(); Blade::directive(); Twig render(); Handlebars.compile(); mustache.render(); Liquid.parse(); EJS.render(); pug.compile(); Smarty assign(); Jinja2 template; Django ORM filter(); FastAPI app.get(); SpringBootApplication; Hibernate session.save(); EntityFramework DbSet; LINQ.Where(); ASP.NET Core builder.Services; Orleans grain; Akka actorOf(); KafkaProducer.send(); RabbitMQ channel.consume(); Celery delay(); Airflow DAG(); Hadoop MapReduce; SparkSession.builder(); pandas.DataFrame(); numpy.array(); matplotlib.pyplot.plot(); tensorflow.keras.Sequential(); torch.nn.Module(); sklearn.fit_transform(); OpenCV cv2.imread(); BeautifulSoup.find_all(); scrapy crawl spider; selenium webdriver.Chrome(); pyautogui.click(); speech_recognition.listen(); nltk.tokenize(); spacy.load(); transformers.pipeline(); langchain agent.run(); openai.ChatCompletion.create(); grpc.Server(); protobuf message User {}; SOAPClient.call(); REST API POST /users; GraphQL query { users }; XMLHTTPRequest(); SOAPEnvelope(); YAML.parse(); JSON.stringify(); BSON.encode(); MessagePack.pack(); Protocol Buffers serialize(); hexadecimal 0xFF; binary 0b1010; octal 0755; regex /^[A-Za-z0-9]+$/; finite state machine; recursion factorial(n-1); dynamic programming dp[i]; binary search tree insert(); linked list append(); stack.push(); queue.pop(); heapify(); quicksort(arr); mergesort(left,right); dfs(node); bfs(graph); Dijkstra shortestPath(); A* algorithm; SHA256(password); MD5(file); AES.encrypt(); RSA.generateKeys(); blockchain.mineBlock(); smartcontract.transfer(); solidity pragma ^0.8.0; web3.eth.sendTransaction(); cairo contract deploy; move module publish; anchor build; solana program deploy; unreal Engine BeginPlay(); Unity Update(); Godot _process(); Roblox Lua Instance.new(); Minecraft Bukkit plugin; FiveM TriggerServerEvent(); Lua coroutine.resume(); LOVE2D love.draw(); pygame.display.update(); SDL_Init(); raylib DrawText(); OpenGL glBegin(); Vulkan vkCreateInstance(); DirectX Present(); CUDA kernel<<<>>>(); OpenMP #pragma omp parallel; MPI_Send(); Arduino digitalWrite(); Raspberry Pi GPIO.output(); ESP32 WiFi.begin(); TensorRT optimize(); ONNX export(); FFmpeg -i input.mp4; imagemagick convert image.png; blender --background; OBS startstreaming; yt-dlp download; handbrakecli; exiftool metadata; pdflatex thesis.tex; bibtex references; pandoc convert.md -o output.pdf; latexmk -pdf; groff -man; asciidoctor build; mdbook serve; hugo new site; jekyll serve; mkdocs build; sphinx-build; obsidian plugin install; emacs init.el; neovim lua config; tmux attach-session; ranger file manager; lf terminal explorer; mc midnight commander; ranger --choosedir; zellij new-session; fish_config; zsh-autosuggestions; oh-my-zsh install; starship init; kitty @ set-font-size; alacritty msg config; wezterm start; hyprctl dispatch; swaymsg reload; i3-msg workspace 1; xrandr --output HDMI-1; pulseaudio --start; pactl list sinks; bluetoothctl connect; nmcli dev wifi connect; iwconfig wlan0; rfkill unblock wifi; docker exec -it container bash; podman run alpine; vagrant up; minikube start; kind create cluster; helm install chart; k9s; argocd app sync; flux bootstrap; consul agent; vault kv put; nomad run job.hcl; rabbitmqctl status; kafka-topics --create; zookeeper-server-start; elasticsearch; kibana; logstash -f config.conf; prometheus --config.file; grafana-server; loki query; tempo traces; jaeger-all-in-one; opentelemetry collector; terraform apply; pulumi up; cloudformation deploy; aws s3 cp; aws ec2 describe-instances; gcloud compute ssh; az vm list; firebase firestore:get; supabase start; netlify deploy; cloudflare pages publish; digitalocean droplet create; linode-cli; render deploy; railway up; flyctl deploy; back4app push; parse-server start; sanity dataset import; strapi develop; contentful space export; wordpress wp plugin install; drupal cache-rebuild; magento setup:upgrade; prestashop module install; moodle cron; nextcloud occ files:scan; owncloud maintenance:mode --on; mediawiki update.php; discourse rebuild; mastodon tootctl; matrix synapse start; mattermost server; rocket.chat start; Zulip manage.py; Odoo scaffold; ERPNext bench start; SAP ABAP REPORT zprogram; COBOL IDENTIFICATION DIVISION; FORTRAN PROGRAM HELLO; Pascal begin end.; BASIC PRINT "HELLO"; Lisp (car '(1 2 3)); Prolog :- dynamic fact/1.; Assembly MOV AX,BX; NASM section .text; MIPS syscall; ARM BL printf; VHDL entity is; Verilog always @(posedge clk); PLC ladder logic rung; Scratch when green flag clicked; Brainfuck +++++[>+++++<-]>.; LOLCODE HAI; Malbolge; Whitespace programming; INTERCAL PLEASE DO ; end; continue; break; goto label; return 0; exit(); abort(); assert(x != NULL); try except finally; finally { cleanup(); }; memory malloc(); free(ptr); new Object(); delete obj; garbage collector sweep(); segmentation fault core dumped; buffer overflow detected; stack smashing protector; kernel panic; blue screen of death; undefined behavior; race condition; deadlock detected; mutex.lock(); semaphore.wait(); thread.start(); async await future promise coroutine fiber actor model event loop polling interrupt syscall hypervisor virtual machine container orchestration edge computing distributed systems quantum computing neural network compiler interpreter transpiler lexer parser AST bytecode runtime linker loader kernel firmware BIOS UEFI cache register opcode pipeline SIMD multithreading multiprocessing hyperthreading blockchain cryptography machine learning artificial intelligence data mining cloud native serverless microservices monolith CQRS event sourcing clean architecture hexagonal architecture dependency injection inversion of control repository pattern singleton observer factory builder adapter decorator facade strategy command mediator iterator visitor prototype flyweight bridge proxy state chain of responsibility template method reactive programming functional programming object oriented programming procedural programming declarative programming concurrent programming metaprogramming reflection introspection serialization deserialization hot reload live reload infinite loop null pointer exception syntax error runtime error logical error warning deprecated experimental alpha beta stable release candidate nightly build long live coding endless terminal scrolling hacker vibes sudo rm -rf /*`;
+        
+        const terminalCommands = rawCommandString.split(';').map(cmd => cmd.trim()).filter(cmd => cmd.length > 0);
+        const terminalEl = document.getElementById('hacker-terminal');
+        const prefixes = ["root@topollo:~# ", "sysadmin@server:$ ", ">_ ", ""];
+        
+        function addTerminalLine() {
+            if(!terminalEl) return;
+            const line = document.createElement('div');
+            line.className = 'terminal-line';
+            
+            const text = terminalCommands[Math.floor(Math.random() * terminalCommands.length)];
+            const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+            
+            line.innerText = prefix + text;
+            terminalEl.appendChild(line);
+
+            // Supaya tak lag, kita hanya simpan maksimum 45 baris pada satu masa
+            if (terminalEl.childElementCount > 45) {
+                terminalEl.removeChild(terminalEl.firstChild);
+            }
+        }
+
+        // Kelajuan pantas seperti skrin hacking matrix
+        setInterval(addTerminalLine, 100);
+
+
+        // 2. SMOOTH SCROLLING NAVIGATION
+        document.querySelectorAll('.nav-link').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetSection = document.querySelector(targetId);
+                const mainContainer = document.getElementById('mainScroll');
+                
+                mainContainer.scrollTo({
+                    top: targetSection.offsetTop,
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // 3. CONTINUOUS SCROLL ANIMATIONS (Intersection Observer)
+        const sections = document.querySelectorAll('section');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    if(entry.target.id === 'portfolio') updateCardStack(); 
+                } else {
+                    entry.target.classList.remove('is-visible');
+                }
+            });
+        }, { threshold: 0.25 }); 
+
+        sections.forEach(section => observer.observe(section));
+
+        // 4. TINDER-STYLE CARD STACK 
+        const stackContainer = document.getElementById('cardStack');
+        const scroller = document.getElementById('scroller');
+        let cards = Array.from(stackContainer.querySelectorAll('.card'));
+
+        let isDragging = false; let isScrolling = false; 
+        let startX, startY, currentX, currentY;
+        const throwThreshold = 70; 
+
+        function setTransitions(enabled) {
+            cards.forEach((card, i) => {
+                if (i < 4) card.style.transition = enabled ? 'transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.4s ease' : 'none';
+            });
+        }
+
+        function updateCardStack() {
+            setTransitions(true); 
+            requestAnimationFrame(() => {
+                cards.forEach((card, i) => {
+                    if (i === 0) {
+                        card.style.zIndex = 100;
+                        card.style.transform = `translate(0px, 0px) scale(1) rotate(0deg)`;
+                        card.style.opacity = '1';
+                        card.style.visibility = 'visible';
+                        card.style.cursor = 'grab';
+                    } else if (i < 4) { 
+                        const scale = 1 - (i * 0.05); const yOffset = i * 20;       
+                        card.style.zIndex = 100 - i;
+                        card.style.transform = `translate(0px, ${yOffset}px) scale(${scale})`;
+                        card.style.opacity = 1 - (i * 0.15); 
+                        card.style.visibility = 'visible';
+                        card.style.cursor = 'default';
+                    } else {
+                        card.style.zIndex = 0; card.style.transform = `scale(0.8)`;
+                        card.style.opacity = '0'; card.style.visibility = 'hidden';
+                    }
+                });
+            });
+        }
+
+        scroller.addEventListener('wheel', (e) => {
+            e.preventDefault(); 
+            if (isDragging || isScrolling) return;
+
+            if (Math.abs(e.deltaY) > 15 || Math.abs(e.deltaX) > 15) {
+                isScrolling = true;
+                const topCard = cards[0];
+                const dirX = (e.deltaX > 0 || e.deltaY > 0) ? -1 : 1;
+                const throwX = dirX * window.innerWidth;
+                const throwY = -100; const rotate = dirX * -30;
+
+                setTransitions(true);
+                topCard.style.transform = `translate(${throwX}px, ${throwY}px) rotate(${rotate}deg)`;
+                topCard.style.opacity = '0';
+
+                for(let i = 1; i < 4; i++) {
+                    if(cards[i]) {
+                        const nextScale = 1 - ((i - 1) * 0.05);
+                        const nextYOffset = (i - 1) * 20;
+                        const nextOpacity = (i - 1) === 0 ? 1 : 1 - ((i - 1) * 0.15);
+                        cards[i].style.transform = `translate(0px, ${nextYOffset}px) scale(${nextScale})`;
+                        cards[i].style.opacity = nextOpacity;
+                    }
+                }
+
+                setTimeout(() => {
+                    stackContainer.appendChild(topCard);
+                    cards = Array.from(stackContainer.querySelectorAll('.card'));
+                    updateCardStack();
+                    setTimeout(() => isScrolling = false, 150); 
+                }, 400);
+            }
+        }, { passive: false });
+
+        stackContainer.addEventListener('pointerdown', (e) => {
+            if (e.target.closest('.card') !== cards[0] || isScrolling) return;
+            isDragging = true; startX = e.clientX; startY = e.clientY;
+            setTransitions(false); cards[0].style.cursor = 'grabbing';
+            cards[0].setPointerCapture(e.pointerId); 
+        });
+
+        stackContainer.addEventListener('pointermove', (e) => {
+            if (!isDragging) return;
+            currentX = e.clientX - startX; currentY = e.clientY - startY;
+            const rotate = currentX * 0.05; 
+            cards[0].style.transform = `translate(${currentX}px, ${currentY}px) rotate(${rotate}deg)`;
+
+            const distance = Math.sqrt(currentX * currentX + currentY * currentY);
+            const progress = Math.min(distance / throwThreshold, 1); 
+
+            for (let i = 1; i < 4; i++) {
+                if (!cards[i]) break;
+                const liveScale = (1 - (i * 0.05)) + ((1 - ((i - 1) * 0.05)) - (1 - (i * 0.05))) * progress;
+                const liveYOffset = (i * 20) + (((i - 1) * 20) - (i * 20)) * progress;
+                const liveOpacity = (1 - (i * 0.15)) + (((i - 1) === 0 ? 1 : 1 - ((i - 1) * 0.15)) - (1 - (i * 0.15))) * progress;
+
+                cards[i].style.transform = `translate(0px, ${liveYOffset}px) scale(${liveScale})`;
+                cards[i].style.opacity = liveOpacity;
+            }
+        });
+
+        const endDrag = () => {
+            if (!isDragging) return;
+            isDragging = false;
+            cards[0].style.cursor = 'grab';
+            setTransitions(true); 
+            
+            if (Math.abs(currentX) > throwThreshold || Math.abs(currentY) > throwThreshold) {
+                cards[0].style.transform = `translate(${currentX * 5}px, ${currentY * 5}px) rotate(${currentX * 0.1}deg)`;
+                cards[0].style.opacity = '0';
+                setTimeout(() => {
+                    stackContainer.appendChild(cards[0]);
+                    cards = Array.from(stackContainer.querySelectorAll('.card'));
+                    updateCardStack();
+                }, 300); 
+            } else updateCardStack();
+            
+            currentX = 0; currentY = 0;
+        };
+
+        stackContainer.addEventListener('pointerup', endDrag);
+        stackContainer.addEventListener('pointercancel', endDrag);
+
+    </script>
+</body>
+</html>
+
+
+```
         }
 
         .text-gradient { background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
